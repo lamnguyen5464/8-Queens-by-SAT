@@ -116,7 +116,7 @@ def place_queens(initial_queens=[], cnf_state=[]):
     tree_board = {}
 
     while (len(queue) != 0):
-        (current_h, current_list, current_board, cnf_result) = heapq.heappop(queue)
+        (_, current_list, current_board, cnf_result) = heapq.heappop(queue)
 
         if (len(current_list) > len(list_result)):
             list_result = copy.deepcopy(current_list)
@@ -164,7 +164,7 @@ start = timeit.default_timer()
 
 list_queens = [(0, 0), (1, 4), (2, 7), (3, 5) ]
 
-(list_result, tree_board) = place_queens(initial_queens=list_queens, cnf_state=cnf)
+(list_result, tree_placed_board) = place_queens(initial_queens=list_queens, cnf_state=cnf)
 placed_board = decode_board(draw_board(list_queens=list_result))
 
 
@@ -177,15 +177,7 @@ stop = timeit.default_timer()
 print('Time: ', stop - start)  
 
 
-
-
-
-
-
-
-
-
-# rootDir = str(pathlib.Path().resolve())
+rootDir = str(pathlib.Path().resolve())
 
 # f = open(rootDir + '/input.txt', 'r')
 # m = int(f.readline())
@@ -204,35 +196,35 @@ print('Time: ', stop - start)
 
 # # print(decode_board(placed_board))
 
-# init_state =  decode_board(draw_board(list_queens=list_queens))
+init_state =  decode_board(draw_board(list_queens=list_queens))
 
-# TAB = "          "
+TAB = "          "
 
-# def print_state(state, tree, tab, file=None, depth=0):
-#     file.write(tab + "depth: " + str(depth) + ')\n')
+def print_state(state, tree, tab, file=None, depth=0):
+    file.write(tab + "depth: " + str(depth) + ')\n')
 
-#     for row in state.split('\n'):
-#         file.write(tab + row + '\n')
+    for row in state.split('\n'):
+        file.write(tab + row + '\n')
     
-#     if not state in tree:
-#         return
+    if not state in tree:
+        return
     
-#     for next_state in tree[state]:
-#         print_state(
-#             state=next_state,
-#             tree=tree,
-#             tab=tab + TAB,
-#             file=file,
-#             depth=depth + 1
-#         )
+    for next_state in tree[state]:
+        print_state(
+            state=next_state,
+            tree=tree,
+            tab=tab + TAB,
+            file=file,
+            depth=depth + 1
+        )
 
-#     file.write('\n')
+    file.write('\n')
 
-# f = open(rootDir + '/output.txt', 'w')
-# print_state(
-#     state=init_state, 
-#     tree=tree_placed_board, 
-#     tab="",
-#     file=f
-# )
-# f.close()
+f = open(rootDir + '/output.txt', 'w')
+print_state(
+    state=init_state, 
+    tree=tree_placed_board, 
+    tab="",
+    file=f
+)
+f.close()
