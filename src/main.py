@@ -108,7 +108,7 @@ def place_queens(initial_queens=[], cnf_state=[]):
     init_h = cal_h(cnf_state)
 
     heapq.heappush(
-        queue, (init_h - len(initial_queens), list_result, init_board, cal_result_cnf(cnf=cnf_state)))
+        queue, (init_h / len(initial_queens), list_result, init_board, cal_result_cnf(cnf=cnf_state)))
 
     decoded_board = decode_board(board=init_board)
     visited_states = [decoded_board]
@@ -150,7 +150,7 @@ def place_queens(initial_queens=[], cnf_state=[]):
 
 
                     heapq.heappush(
-                        queue, (cal_h(next_board) - len(next_list), next_list, next_board, new_cnf_result))
+                        queue, (cal_h(next_board) / len(next_list), next_list, next_board, new_cnf_result))
 
     return (list_result, tree_board)
 
