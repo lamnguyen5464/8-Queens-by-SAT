@@ -50,42 +50,73 @@ def decode_board(board=init_board()):
     return result
 
 
-def cal_h(board=init_board()):
+def cal_h(cnf_state=[]):
     h = 0
-    for i in range(0, len(board)):
-        for j in range(0, len(board[i])):
-            if (board[i][j] == 0):
-                h = h + 1
-
+    for cnf in cnf_state:
+        if cnf == True:
+            h = h + 1
     return h
 
+def pos(i, j):
+    return i * 8 + j + 1
 
-def check_if_can_place(queen_pos, board):
-    pos_i = queen_pos[0]
-    pos_j = queen_pos[1]
+def cal_result_cnf(cnf=[], queens=[]):
+    res = []
+    for clause in cnf:
+        sat_for_cnf = []
+        for literal in clause:
+            if abs(literal) in queens:
+                sat_for_cnf.append(not (literal < 0))
+            else:
+                sat_for_cnf.append(literal < 0)
 
-    return board[pos_i][pos_j] == 0
+        res.append(sat_for_cnf)
+    ans = []
+    for item in res:
+        if True in item:
+            ans.append(True)
+        else:
+            ans.append(False)
+
+    return copy.deepcopy(ans)
 
 
-def place_queens(initial_queens=[]):
+def check_if_can_place(queen_pos, board, cnf_state, cnf_result, current_list):
+    can_place = True
+    new_list = copy.deepcopy(current_list)
+    new_list.append(queen_pos)
+    new_cnf_result = cal_result_cnf(cnf=cnf_state, queens=new_list)
+
+    for index in range(0, len(cnf_result)):
+        if cnf_result[index] == True and new_cnf_result[index] == False:
+            can_place = False
+            break
+    
+    (i, j) = queen_pos
+    can_place = can_place and board[i][j] == 0
+
+    return (can_place, copy.deepcopy(cnf_result))
+
+
+def place_queens(initial_queens=[], cnf_state=[]):
     list_result = []
     for queens in initial_queens:
         list_result.append(queens)
 
     queue = []
     init_board = draw_board(list_queens=list_result)
-    init_h = cal_h(init_board)
+    init_h = cal_h(cnf_state)
+
     heapq.heappush(
-        queue, (init_h, list_result, init_board))
+        queue, (init_h - len(initial_queens), list_result, init_board, cal_result_cnf(cnf=cnf_state)))
 
     decoded_board = decode_board(board=init_board)
-    visited_states = [decode_board]
+    visited_states = [decoded_board]
 
     tree_board = {}
 
     while (len(queue) != 0):
-        (current_h, current_list, current_board) = heapq.heappop(queue)
-
+        (current_h, current_list, current_board, cnf_result) = heapq.heappop(queue)
 
         if (len(current_list) > len(list_result)):
             list_result = copy.deepcopy(current_list)
@@ -94,8 +125,9 @@ def place_queens(initial_queens=[]):
 
         for i in range(0, SIZE):
             for j in range(0, SIZE):
-                if check_if_can_place(queen_pos=(i, j), board=current_board):
+                (can_place, new_cnf_result) = check_if_can_place(current_list=current_list, queen_pos=(i, j), board=current_board, cnf_state=cnf_state, cnf_result=cnf_result)
 
+                if can_place:
                     next_board = draw_board(
                         list_queens=[(i, j)],
                         board=copy.deepcopy(current_board)
@@ -118,61 +150,89 @@ def place_queens(initial_queens=[]):
 
 
                     heapq.heappush(
-                        queue, (cal_h(next_board), next_list, next_board))
+                        queue, (cal_h(next_board) - len(next_list), next_list, next_board, new_cnf_result))
 
     return (list_result, tree_board)
 
 
-list_queens = []
-rootDir = str(pathlib.Path().resolve())
+from input import cnf
 
-f = open(rootDir + '/input.txt', 'r')
-m = int(f.readline())
-for _ in range(0, m):
-    [x, y] = [(int)(num) for num in f.readline().split()]
-    list_queens.append((x, y))
-f.close()
+import timeit
 
-(list_place_queens, tree_placed_board) = place_queens(initial_queens=list_queens)
-print(len(list_place_queens))
-print(list_place_queens)
+start = timeit.default_timer()
 
-placed_board = draw_board(list_queens=list_place_queens)
 
-# draw initial board
+list_queens = [(0, 0), (1, 4), (2, 7), (3, 5) ]
 
-# print(decode_board(placed_board))
+(list_result, tree_board) = place_queens(initial_queens=list_queens, cnf_state=cnf)
+placed_board = decode_board(draw_board(list_queens=list_result))
 
-init_state =  decode_board(draw_board(list_queens=list_queens))
 
-TAB = "          "
+print(placed_board)
 
-def print_state(state, tree, tab, file=None, depth=0):
-    file.write(tab + "depth: " + str(depth) + ')\n')
 
-    for row in state.split('\n'):
-        file.write(tab + row + '\n')
+
+
+stop = timeit.default_timer()
+print('Time: ', stop - start)  
+
+
+
+
+
+
+
+
+
+
+# rootDir = str(pathlib.Path().resolve())
+
+# f = open(rootDir + '/input.txt', 'r')
+# m = int(f.readline())
+# for _ in range(0, m):
+#     [x, y] = [(int)(num) for num in f.readline().split()]
+#     list_queens.append((x, y))
+# f.close()
+
+# (list_place_queens, tree_placed_board) = place_queens(initial_queens=list_queens)
+# print(len(list_place_queens))
+# print(list_place_queens)
+
+# placed_board = draw_board(list_queens=list_place_queens)
+
+# # draw initial board
+
+# # print(decode_board(placed_board))
+
+# init_state =  decode_board(draw_board(list_queens=list_queens))
+
+# TAB = "          "
+
+# def print_state(state, tree, tab, file=None, depth=0):
+#     file.write(tab + "depth: " + str(depth) + ')\n')
+
+#     for row in state.split('\n'):
+#         file.write(tab + row + '\n')
     
-    if not state in tree:
-        return
+#     if not state in tree:
+#         return
     
-    for next_state in tree[state]:
-        print_state(
-            state=next_state,
-            tree=tree,
-            tab=tab + TAB,
-            file=file,
-            depth=depth + 1
-        )
+#     for next_state in tree[state]:
+#         print_state(
+#             state=next_state,
+#             tree=tree,
+#             tab=tab + TAB,
+#             file=file,
+#             depth=depth + 1
+#         )
 
-    file.write('\n')
+#     file.write('\n')
 
-f = open(rootDir + '/output.txt', 'w')
-print_state(
-    state=init_state, 
-    tree=tree_placed_board, 
-    tab="",
-    file=f
-)
-f.close()
-
+# f = open(rootDir + '/output.txt', 'w')
+# print_state(
+#     state=init_state, 
+#     tree=tree_placed_board, 
+#     tab="",
+#     file=f
+# )
+# f.close()
